@@ -50,10 +50,8 @@ class GroceryInventory
 		size_t			Size();
 
 	private:
-		//
-		//	TO BE COMPLETED.
-		//
-
+		map<string, GroceryItem> myMap;
+		float newTaxRate = 0.0;
 };
 
 #endif
