@@ -7,10 +7,11 @@ using namespace std;
 
 bool GroceryInventory::AddItem(const string& name, int quantity,
 							   float price, bool taxable)
+//If there is no duplicate, find() will return an iterator == end iterator.
 {
-	if (myMap.find(name) == myMap.end()) {
-		GroceryItem jjj = GroceryItem(name, quantity, price, taxable);
-		myMap[name] = jjj;
+	if (myMap.find(name) == myMap.end()) {  
+		GroceryItem newItem = GroceryItem(name, quantity, price, taxable);
+		myMap[name] = newItem;
 		return true;
 	}
 	else {
@@ -53,11 +54,15 @@ void GroceryInventory::CreateFromFile(const string& fileName)
 
 
 Receipt GroceryInventory::CreateReceipt(const string& fileName)
+//Reads a file containing the item names and finds the item with same
+// name in GroceryItem. Adds all the prices together, if taxable multiply
+// tax amount by price of that item and add it to total. Returns Receipt type.
 {
 	ifstream file(fileName);
 	string name;
-	Receipt c;
-	c.subtotal_ = 0;
+	Receipt newRcpt;
+	newRcpt.subtotal_ = 0.0;
+	newRcpt.taxAmount_ = 0.0;
 
 	if (file.is_open())
 	{
@@ -66,14 +71,15 @@ Receipt GroceryInventory::CreateReceipt(const string& fileName)
 			file >> name;
 			if (!file.fail())
 			{
-				GroceryItem* b = FindItem(name);
-				ReceiptItem a = ReceiptItem(name, b->price_);
-				b->quantity_--;
+				GroceryItem* grocItm = FindItem(name);
+				ReceiptItem rcptItm = ReceiptItem(name, grocItm->price_);
 
-				c.item_.push_back(a);
-				c.subtotal_ += b->price_;
-				c.taxAmount_ = c.subtotal_ * newTaxRate;
-				c.total_ = c.subtotal_ + c.taxAmount_;
+				newRcpt.item_.push_back(rcptItm);
+				newRcpt.subtotal_ += grocItm->price_;
+				if (grocItm->taxable_) { newRcpt.taxAmount_ = grocItm->price_ * newTaxRate; }
+				newRcpt.total_ = newRcpt.subtotal_ + newRcpt.taxAmount_;
+
+				grocItm->quantity_--;
 			}
 			else
 			{
@@ -81,9 +87,7 @@ Receipt GroceryInventory::CreateReceipt(const string& fileName)
 			}
 		}
 		file.close();
-		// Ask prof about taxrate error
-		//cout << c.subtotal_ << " " << c.taxAmount_ << " " << c.total_ << endl;
-		return c;
+		return newRcpt;
 	}
 	else
 	{
@@ -93,6 +97,8 @@ Receipt GroceryInventory::CreateReceipt(const string& fileName)
 }
 
 GroceryItem*	GroceryInventory::FindItem(const string& name)
+//Returns reference to mapped value with key name. Otherwise, it
+// throws out of range exception and catch returns nullptr.
 {
 	try {
 		return &myMap.at(name);
@@ -103,6 +109,7 @@ GroceryItem*	GroceryInventory::FindItem(const string& name)
 }
 
 bool GroceryInventory::RemoveItem(const string& name)
+//Removes item from map with given name. Return false if item not found.
 {
 	if (myMap.find(name) != myMap.end()) {
 		myMap.erase(name);
@@ -114,6 +121,7 @@ bool GroceryInventory::RemoveItem(const string& name)
 }
 
 void GroceryInventory::SetTaxRate(float taxRate)
+//Sets tax rate.
 {
 	newTaxRate = taxRate / 100;
 }
